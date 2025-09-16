@@ -9,4 +9,4 @@ docker buildx build \
 	--build-arg VCS_REF=$(git rev-parse --short HEAD) \
 	-t $USERNAME/$IMAGE:$VERSION \
 	-t $USERNAME/$IMAGE:latest \
-	-- push .
+	--push .
