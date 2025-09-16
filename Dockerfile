@@ -38,8 +38,15 @@ RUN ./configure \
     --prefix=/etc/nginx \
     --sbin-path=/usr/sbin/nginx \
     --conf-path=/etc/nginx/nginx.conf \
+    --pid-path=/var/run/nginx/nginx.pid \
+    --lock-path=/var/run/nginx/nginx.lock \
     --error-log-path=/var/log/nginx/error.log \
     --http-log-path=/var/log/nginx/access.log \
+    --http-client-body-temp-path=/var/cache/nginx/client_temp \
+    --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+    --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+    --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+    --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
     --with-http_ssl_module \
     --with-http_v2_module \
     --with-http_realip_module \
@@ -53,6 +60,8 @@ RUN ./configure \
 FROM ubuntu:24.04
 LABEL maintainer="VolgaCTF"
 
+ARG UID=2600
+ARG GID=2600
 ARG BUILD_DATE
 ARG BUILD_VERSION
 ARG VCS_REF
@@ -78,8 +87,16 @@ COPY --from=build /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=build /etc/nginx /etc/nginx
 COPY --from=build /var/log/nginx /var/log/nginx
 
-# Create necessary dirs
-RUN mkdir -p /var/cache/nginx /var/run/nginx
+# Create necessary dirs and change permissions
+RUN mkdir -p /var/cache/nginx /var/run/nginx \
+    && groupadd -g ${GID} -r nginx \
+    && useradd -u ${UID} -r -g nginx -d /nonexistent -s /sbin/nologin nginx \
+    && chown -R nginx:nginx /etc/nginx \
+    && chown -R nginx:nginx /var/log/nginx \
+    && chown -R nginx:nginx /var/cache/nginx \
+    && chown -R nginx:nginx /var/run/nginx \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
 
 STOPSIGNAL SIGTERM
 
