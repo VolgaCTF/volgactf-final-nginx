@@ -1,15 +1,16 @@
-FROM ubuntu:24.04 AS build
+FROM debian:13-slim AS build
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libpcre3-dev \
+    libpcre2-dev \
     zlib1g-dev \
     libssl-dev \
     libxml2-dev \
     libxslt-dev \
     libbrotli-dev \
     wget \
+    ca-certificates \
     unzip \
     git \
     curl \
@@ -17,8 +18,8 @@ RUN apt-get update && apt-get install -y \
 
 
 # Set versions (pinning for reproducibility)
-ENV NGINX_VERSION=1.29.1
-ENV NJS_VERSION=0.9.1
+ENV NGINX_VERSION=1.31.5
+ENV NJS_VERSION=1.0.1
 
 WORKDIR /usr/src
 
@@ -59,7 +60,7 @@ RUN ./configure \
     && make && make install
 
 # Final runtime image
-FROM ubuntu:24.04
+FROM debian:13-slim
 LABEL maintainer="VolgaCTF"
 
 ARG UID=2600
@@ -77,7 +78,7 @@ LABEL org.label-schema.vcs-ref=$VCS_REF
 LABEL org.label-schema.version=$BUILD_VERSION
 
 RUN apt-get update && apt-get install -y \
-    libpcre3 \
+    libpcre2-8-0 \
     zlib1g \
     libssl3 \
     libxml2 \
